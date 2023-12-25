@@ -32,6 +32,12 @@ var picocssZipFile []byte
 //go:embed tmpl/index.html
 var indexTemplate string
 
+//go:embed static/favicon.png
+var favicon []byte
+
+//go:embed static/pastry.png
+var logo []byte
+
 type entry struct {
 	Text string
 	When time.Time
@@ -93,6 +99,18 @@ func (p *pastry) handleReadPaste(c net.Conn) {
 
 	c.Write(b.Bytes())
 
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Write(favicon)
+}
+
+func logoHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Write(logo)
 }
 
 type htmlEntry struct {
@@ -170,6 +188,8 @@ func main() {
 	mux.HandleFunc("/", p.showPastry)
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(picocssZipFs)))
 	mux.HandleFunc("/paste", p.paste)
+	mux.HandleFunc("/favicon.png", faviconHandler)
+	mux.HandleFunc("/logo.png", logoHandler)
 
 	go http.ListenAndServe(":9180", mux)
 
