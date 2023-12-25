@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/pico-master/css/pico.min.css">
+    <title>Pastry</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
+
+    <script>
+      function copy(tdname) {
+	  navigator.clipboard.writeText(document.getElementById(tdname).innerText);
+      }
+    </script>
+  </head>
+  <body>
+    <main class="container">
+      <br/>
+      <center><h2>Pastry</h2></center>
+      <br/>
+
+      <form action="/paste" method="post">
+	<label for="text">Text</label>
+	<textarea id="text" name="text" rows="5" cols="80" required></textarea>
+	<button type="submit">Paste</button>
+      </form>
+      <br/>
+
+      <table role="grid">{{range $y, $x := . }}
+	<tr>
+	  <td style="white-space:nowrap;">{{ $x.DateTime }}</td>
+	  <td id="text{{$y}}"><pre>{{ $x.Text }}</pre></td>
+	  <td><button onclick="copy('text{{$y}}')">Copy</button></td>
+	</tr>{{end}}
+      </table>
+    </main>
+  </body>
+</html>
