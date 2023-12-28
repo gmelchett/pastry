@@ -77,6 +77,9 @@ func (p *pastry) handleWritePaste(c net.Conn) {
 func (p *pastry) handleReadPaste(c net.Conn) {
 	defer c.Close()
 
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
 	buf := make([]byte, 1024*1024)
 	c.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 
@@ -174,6 +177,9 @@ type htmlEntry struct {
 }
 
 func (p *pastry) showPastry(w http.ResponseWriter, _ *http.Request) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
 	h := make([]htmlEntry, 0, len(p.texts))
 
 	for i := len(p.texts) - 1; i >= 0; i-- {
