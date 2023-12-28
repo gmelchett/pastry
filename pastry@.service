@@ -1,0 +1,9 @@
+[Unit]
+Description=Single user pastebin home networks
+
+[Service]
+User=%i
+ExecStart=/usr/local/bin/pastry
+
+[Install]
+WantedBy=multi-user.target
