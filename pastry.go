@@ -118,10 +118,7 @@ func (p *pastry) handleReadPaste(c net.Conn) {
 		}
 	case "grep":
 		var b bytes.Buffer
-		if len(s) < 6 {
-			return
-		}
-		m := s[5:]
+		_, m, _ := strings.Cut(s, "grep ")
 		for i := range p.texts {
 			for num, l := range strings.Split(p.texts[i].Text, "\n") {
 				if idx := strings.Index(l, m); idx != -1 {
@@ -151,7 +148,6 @@ func (p *pastry) handleReadPaste(c net.Conn) {
 
 	case "drop":
 		if i, err := toIdx(); err == nil {
-
 			p.texts = append(p.texts[:i], p.texts[i+1:]...)
 		}
 	default:
