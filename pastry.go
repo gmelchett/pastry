@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
+// pastry - a pastebin server for your home network
 package main
 
 import (
@@ -20,6 +21,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"gerace.dev/zipfs"
 	"github.com/OpenPeeDeeP/xdg"
@@ -63,51 +65,104 @@ func (p *pastry) addText(text string) {
 
 func (p *pastry) handleWritePaste(c net.Conn) {
 	defer c.Close()
-	buf := make([]byte, 128*1024)
+	buf := make([]byte, 1024*1024)
 
 	if n, err := c.Read(buf); err == nil && n > 0 {
-		p.addText(string(buf[:n]))
+		if utf8.Valid(buf[:n]) {
+			p.addText(string(buf[:n]))
+		}
 	}
 }
 
 func (p *pastry) handleReadPaste(c net.Conn) {
 	defer c.Close()
-	var b bytes.Buffer
 
-	start := 0
-
-	buf := make([]byte, 128*1024)
+	buf := make([]byte, 1024*1024)
 	c.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 
-	if n, err := c.Read(buf); err == nil && n > 0 {
-		s := strings.TrimSpace(strings.ReplaceAll(string(buf[:n]), "\n", ""))
-		if v, err := strconv.ParseUint(s, 0, 64); err == nil {
-			if int(v) < len(p.texts) {
-				start = len(p.texts) - int(v)
-			}
-		} else {
-			fmt.Printf("Failed to parse number: '%s'", s)
+	n, err := c.Read(buf)
+
+	if err != nil || n == 0 {
+		c.Write([]byte(p.texts[len(p.texts)-1].Text))
+		return
+	}
+
+	s := strings.ReplaceAll(string(buf[:n]), "\n", "")
+	cmd := strings.Fields(s)
+	if len(cmd) == 0 {
+		return
+	}
+
+	toIdx := func() (int, error) {
+		if len(cmd) == 1 {
+			return len(p.texts) - 1, nil
 		}
 
-	} else if len(p.texts) > 10 {
-		start = len(p.texts) - 10
+		if v, err := strconv.Atoi(cmd[1]); err == nil {
+			if v >= 0 && v < len(p.texts) {
+				return v, nil
+			} else if v <= 0 && (len(p.texts)+v) >= 0 {
+				return len(p.texts) + v, nil
+			}
+		}
+		return 0, fmt.Errorf("Out of bounds")
 	}
 
-	for i := start; i < len(p.texts); i++ {
-		b.WriteString(fmt.Sprintf(" * Entry: %d - %s\n%s\n", i, humanize.Time(p.texts[i].When), p.texts[i].Text))
+	switch cmd[0] {
+	case "get":
+		if i, err := toIdx(); err == nil {
+			c.Write([]byte(p.texts[i].Text))
+		}
+	case "grep":
+		var b bytes.Buffer
+		if len(s) < 6 {
+			return
+		}
+		m := s[5:]
+		for i := range p.texts {
+			for num, l := range strings.Split(p.texts[i].Text, "\n") {
+				if idx := strings.Index(l, m); idx != -1 {
+					when := humanize.Time(p.texts[i].When)
+					pad := ""
+					if len(when) < 20 {
+						pad = strings.Repeat(" ", 20-len(when))
+					}
+					b.WriteString(fmt.Sprintf("#% 3d\t% 3d\t%s%s\t%s\n", i, num+1, when, pad, l))
+				}
+			}
+		}
+		c.Write(b.Bytes())
+	case "list":
+		var b bytes.Buffer
+
+		for i := range p.texts {
+			when := humanize.Time(p.texts[i].When)
+			pad := ""
+			if len(when) < 20 {
+				pad = strings.Repeat(" ", 20-len(when))
+			}
+			b.WriteString(fmt.Sprintf("#% 3d\t%s%s\t%s\n", i, when, pad, strings.Trim(p.texts[i].Text, "\n")))
+
+		}
+		c.Write(b.Bytes())
+
+	case "drop":
+		if i, err := toIdx(); err == nil {
+
+			p.texts = append(p.texts[:i], p.texts[i+1:]...)
+		}
+	default:
+		c.Write([]byte("# Unknown command\n"))
 	}
-
-	c.Write(b.Bytes())
-
 }
 
-func faviconHandler(w http.ResponseWriter, r *http.Request) {
+func faviconHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(favicon)
 }
 
-func logoHandler(w http.ResponseWriter, r *http.Request) {
+func logoHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(logo)
