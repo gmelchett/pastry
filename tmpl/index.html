@@ -9,7 +9,12 @@
 
     <script>
       function copy(tdname) {
-	  navigator.clipboard.writeText(document.getElementById(tdname).innerText);
+        const pre = document.querySelector(`#${tdname} pre`);
+        if (pre) {
+          navigator.clipboard.writeText(pre.textContent.trim())
+            .then(() => console.log("Copied!"))
+            .catch(err => console.error("Copy failed:", err));
+        }
       }
     </script>
   </head>
@@ -18,17 +23,17 @@
       <br/>
       <h2><img src="/logo.png"/>Pastry</h2>
       <form action="/paste" method="post">
-	<textarea id="text" name="text" rows="5" cols="80" required></textarea>
-	<button type="submit">Paste</button>
+        <textarea id="text" name="text" rows="5" cols="80" required></textarea>
+        <button type="submit">Paste</button>
       </form>
       <br/>
 
       <table role="grid">{{range $y, $x := . }}
-	<tr>
-	  <td style="white-space:nowrap;">{{ $x.DateTime }}</td>
-	  <td id="text{{$y}}"><pre>{{ $x.Text }}</pre></td>
-	  <td><button onclick="copy('text{{$y}}')">Copy</button></td>
-	</tr>{{end}}
+        <tr>
+          <td style="white-space:nowrap;">{{ $x.DateTime }}</td>
+          <td id="text{{$y}}"><pre>{{ $x.Text }}</pre></td>
+          <td><button type="button" onclick="copy('text{{$y}}')">Copy</button></td>
+        </tr>{{end}}
       </table>
     </main>
   </body>
