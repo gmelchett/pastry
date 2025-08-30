@@ -111,9 +111,10 @@ As private as you make it. Anyone with access can read, corrupt and/or delete al
 
 The `pastry` icon was "created" by https://www.bing.com/images/create
 
+The latest web fixes and updates are done with help from ChatGPT.
 
 ## Future plans
-Maybe add some way to remove old snippets from the web?
+Maybe add some way to remove old snippets from the web? Expire date?
 
 
 ## License

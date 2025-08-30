@@ -7,70 +7,69 @@
     <title>Pastry</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
 
+    <style>
+      td.min-content {
+        width: 1px;                /* shrink to fit contents */
+        white-space: nowrap;       /* prevent wrapping */
+        text-align: center;        /* center date + button */
+        vertical-align: top;       /* align to top of row */
+      }
+
+      td.scroll-cell {
+        max-width: calc(100vw - 120px); /* leave space for left column */
+        overflow-x: auto;               /* horizontal scroll if needed */
+        padding: 0.2rem;
+      }
+
+      td.scroll-cell pre {
+        margin: 0;
+        white-space: pre;          /* preserve text, no wrapping */
+        display: block;
+        max-height: calc(1.2em * 20); /* limit to ~20 lines */
+        overflow-y: auto;          /* vertical scroll if longer */
+      }
+
+    </style>
+
     <script>
       function copy(tdname) {
-	  const pre = document.querySelector(`#${tdname} pre`);
-	  const btn = event.target; // the button that was clicked
-	  if (pre) {
-	      navigator.clipboard.writeText(pre.textContent.trim())
-		  .then(() => {
-		      btn.textContent = "Copied!";
-		      setTimeout(() => btn.textContent = "Copy", 1200);
-		  })
-		  .catch(err => console.error("Copy failed:", err));
-	  }
+        const pre = document.querySelector(`#${tdname} pre`);
+        const btn = event.target; // clicked button
+        if (pre) {
+          navigator.clipboard.writeText(pre.textContent.trim())
+            .then(() => {
+              btn.textContent = "Copied!";
+              setTimeout(() => btn.textContent = "Copy", 1200);
+            })
+            .catch(err => console.error("Copy failed:", err));
+        }
       }
     </script>
   </head>
-
   <body>
     <main class="container">
       <br/>
       <h2><img src="/logo.png"/>Pastry</h2>
+
       <form action="/paste" method="post">
         <textarea id="text" name="text" rows="5" cols="80" required></textarea>
         <button type="submit">Paste</button>
       </form>
+
       <br/>
 
-      <style>
-	td.min-content {
-	    width: 1px;                /* forces table to shrink column */
-	    white-space: nowrap;       /* keep date and button on one line each */
-	    text-align: center;
-	    vertical-align: top;       /* keeps date+button at top */
-	}
-
-	td.scroll-cell {
-	    max-width: calc(100vw - 120px); /* leave space for the left column */
-	    overflow-x: auto;
-	    padding: 0.2rem;
-	}
-
-	td.scroll-cell pre {
-	    margin: 0;
-	    white-space: pre;          /* no wrapping inside <pre> */
-	}
-
-	td.min-content {
-	    width: 1px;
-	    white-space: nowrap;
-
-	}
-      </style>
-
       <table role="grid">
-	{{range $y, $x := . }}
-	<tr>
-	  <td class="min-content">
-	    {{ $x.DateTime }}<br>
-	    <button type="button" aria-label="Copy text" onclick="copy('text{{$y}}')">Copy</button>
-	  </td>
-	  <td class="scroll-cell" id="text{{$y}}">
-	    <pre>{{ $x.Text }}</pre>
-	  </td>
-	</tr>
-	{{end}}
+        {{range $y, $x := . }}
+        <tr>
+          <td class="min-content">
+            {{ $x.DateTime }}<br>
+            <button type="button" aria-label="Copy text" onclick="copy('text{{$y}}')">Copy</button>
+          </td>
+          <td class="scroll-cell" id="text{{$y}}">
+            <pre>{{ $x.Text }}</pre>
+          </td>
+        </tr>
+        {{end}}
       </table>
     </main>
   </body>
