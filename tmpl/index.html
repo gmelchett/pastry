@@ -9,15 +9,20 @@
 
     <script>
       function copy(tdname) {
-        const pre = document.querySelector(`#${tdname} pre`);
-        if (pre) {
-          navigator.clipboard.writeText(pre.textContent.trim())
-            .then(() => console.log("Copied!"))
-            .catch(err => console.error("Copy failed:", err));
-        }
+	  const pre = document.querySelector(`#${tdname} pre`);
+	  const btn = event.target; // the button that was clicked
+	  if (pre) {
+	      navigator.clipboard.writeText(pre.textContent.trim())
+		  .then(() => {
+		      btn.textContent = "Copied!";
+		      setTimeout(() => btn.textContent = "Copy", 1200);
+		  })
+		  .catch(err => console.error("Copy failed:", err));
+	  }
       }
     </script>
   </head>
+
   <body>
     <main class="container">
       <br/>
@@ -28,12 +33,44 @@
       </form>
       <br/>
 
-      <table role="grid">{{range $y, $x := . }}
-        <tr>
-          <td style="white-space:nowrap;">{{ $x.DateTime }}</td>
-          <td id="text{{$y}}"><pre>{{ $x.Text }}</pre></td>
-          <td><button type="button" onclick="copy('text{{$y}}')">Copy</button></td>
-        </tr>{{end}}
+      <style>
+	td.min-content {
+	    width: 1px;                /* forces table to shrink column */
+	    white-space: nowrap;       /* keep date and button on one line each */
+	    text-align: center;
+	    vertical-align: top;       /* keeps date+button at top */
+	}
+
+	td.scroll-cell {
+	    max-width: calc(100vw - 120px); /* leave space for the left column */
+	    overflow-x: auto;
+	    padding: 0.2rem;
+	}
+
+	td.scroll-cell pre {
+	    margin: 0;
+	    white-space: pre;          /* no wrapping inside <pre> */
+	}
+
+	td.min-content {
+	    width: 1px;
+	    white-space: nowrap;
+
+	}
+      </style>
+
+      <table role="grid">
+	{{range $y, $x := . }}
+	<tr>
+	  <td class="min-content">
+	    {{ $x.DateTime }}<br>
+	    <button type="button" aria-label="Copy text" onclick="copy('text{{$y}}')">Copy</button>
+	  </td>
+	  <td class="scroll-cell" id="text{{$y}}">
+	    <pre>{{ $x.Text }}</pre>
+	  </td>
+	</tr>
+	{{end}}
       </table>
     </main>
   </body>
