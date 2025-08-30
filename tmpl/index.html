@@ -23,10 +23,12 @@
 
       td.scroll-cell pre {
         margin: 0;
-        white-space: pre;          /* preserve text, no wrapping */
+        white-space: pre;             /* preserve text, no wrapping */
         display: block;
         max-height: calc(1.2em * 20); /* limit to ~20 lines */
-        overflow-y: auto;          /* vertical scroll if longer */
+        overflow-y: auto;             /* vertical scroll if longer */
+        max-width: 108ch;              /* scroll horizontally if >80 chars */
+        overflow-x: auto;             /* horizontal scroll if too wide */
       }
 
     </style>
